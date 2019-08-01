@@ -11,6 +11,10 @@ mvn install:install-file -Dfile=/path/to/layout/module/layout-0.0.2-20140323.111
 mvn install:install-file -Dfile=/path/to/cssbox/module/cssbox-4.6-20140321.123233-1.jar -DgroupId=net.sf.cssbox -DartifactId=cssbox -Dversion=4.6-SNAPSHOT -Dpackaging=jar
 mvn install:install-file -Dfile=/path/to/mulan/module/mulan-1.4.0.jar -DgroupId=net.sf.mulan -DartifactId=mulan -Dversion=1.4.0 -Dpackaging=jar
 
+Build:
+# mvn assembly:single # This for some reason does not containd actual code of webstorm
+mvn -Dmaven.test.skip=true package
+
 Requirements to run:
 ===================
 Running database on target monitoring server. Database should be created with attached sql script.

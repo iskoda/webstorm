@@ -12,14 +12,15 @@ import java.text.SimpleDateFormat;
 import java.util.UUID;
 import java.util.Date;
 
-import backtype.storm.Config;
-import backtype.storm.LocalCluster;
-import backtype.storm.topology.TopologyBuilder;
+import org.apache.storm.Config;
+import org.apache.storm.LocalCluster;
+import org.apache.storm.topology.TopologyBuilder;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.util.StatusPrinter;
-import backtype.storm.StormSubmitter;
-import backtype.storm.generated.AlreadyAliveException;
-import backtype.storm.generated.InvalidTopologyException;
+import org.apache.storm.StormSubmitter;
+import org.apache.storm.generated.AlreadyAliveException;
+import org.apache.storm.generated.AuthorizationException;
+import org.apache.storm.generated.InvalidTopologyException;
 
 import org.fit.burgetr.webstorm.bolts.AnalyzerBolt;
 import org.fit.burgetr.webstorm.bolts.DownloaderBolt;
@@ -40,13 +41,13 @@ public class RssMonitorTopologyDistr
 	// ISO date formatter
 	private static DateFormat isoFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
-    public static void main(String[] args) throws SQLException, UnknownHostException, AlreadyAliveException, InvalidTopologyException
+    public static void main(String[] args) throws SQLException, UnknownHostException, AlreadyAliveException, InvalidTopologyException, AuthorizationException
     {
         //logging status
         Logger logger = LoggerFactory.getLogger(RssMonitorTopology.class);
         logger.debug("TOPOLOGY START");
-        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        StatusPrinter.print(lc);
+        //LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory(); // Problem: org.apache.logging.slf4j.Log4jLoggerFactory cannot be cast to ch.qos.logback.classic.LoggerContext
+        //StatusPrinter.print(lc);
         
         String uuid=UUID.randomUUID().toString();
         
