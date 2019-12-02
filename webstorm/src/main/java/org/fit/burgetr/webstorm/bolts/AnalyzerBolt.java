@@ -27,7 +27,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cz.vutbr.fit.monitoring.Monitoring;
+//import cz.vutbr.fit.monitoring.Monitoring;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.IRichBolt;
@@ -53,7 +53,7 @@ public class AnalyzerBolt implements IRichBolt
     private OutputCollector collector;
     private String kwStreamId;
     private String imgStreamId;
-    private Monitoring monitor;
+    //private Monitoring monitor;
     private String hostname;
     /**
      * Creates a new AnalyzerBolt.
@@ -68,7 +68,7 @@ public class AnalyzerBolt implements IRichBolt
         this.kwStreamId = kwStreamId;
         this.imgStreamId = imgStreamId;
         webstormId=uuid;
-        monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
+        //monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
     }
 
     @SuppressWarnings("rawtypes")
@@ -90,12 +90,22 @@ public class AnalyzerBolt implements IRichBolt
     	    
     		String baseurl = input.getString(1);
 	        String html = input.getString(2);
+	        
 	        @SuppressWarnings("unchecked")
 			HashMap<String,byte[]> allImg = (HashMap<String, byte[]>) input.getValue(3);
 	        String uuid=input.getString(4);
 	        DateTime now = DateTime.now();
 	        String dateString=String.valueOf(now.getYear())+"-"+String.valueOf(now.getMonthOfYear())+"-"+String.valueOf(now.getDayOfMonth())+"-"+String.valueOf(now.getHourOfDay())+"-"+String.valueOf(now.getMinuteOfHour())+"-"+String.valueOf(now.getSecondOfMinute())+"-"+String.valueOf(now.getMillisOfSecond());
 	        log.info("DateTime:"+dateString+", Analyzing url: " + baseurl+" ("+uuid+")");
+	        
+	        // Truncate too long HTMLs - as it probably breaks processing sometimes??
+	        int maxLength = 120000;
+	        if (html != null && html.length() > maxLength) {
+	        	html = html.substring(0, maxLength);
+		        log.warn("DateTime:"+dateString+", Analyzing url: " + baseurl+" ("+uuid+"), truncated HTML from "+Integer.toString(html.length()));
+	        }
+	        
+	        // Start all analyzing stuff
 	        try
 	        {
 	            LogicalTagLookup lookup = processUrl(html, new URL(baseurl));
@@ -110,12 +120,12 @@ public class AnalyzerBolt implements IRichBolt
 	                    for (String keyword : entry.getValue())
 	                    {
 	                        if (!keyword.equals(name)){
-	                        	try {
-									monitor.MonitorTuple("AnalyzerBolt", uuid,1, hostname);
-								} catch (SQLException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
+//	                        	try {
+//									//monitor.MonitorTuple("AnalyzerBolt", uuid,1, hostname);
+//								} catch (SQLException e) {
+//									// TODO Auto-generated catch block
+//									e.printStackTrace();
+//								}
 	                            collector.emit(kwStreamId, new Values(name, keyword, baseurl));
 	                        }
 	                    }
@@ -138,12 +148,12 @@ public class AnalyzerBolt implements IRichBolt
 	                }
 	                
 	                Long estimatedTime = System.nanoTime() - startTime;
-	                try {
-	                	monitor.MonitorTuple("AnalyzerBolt", uuid,1, hostname, estimatedTime);
-	                } catch (SQLException e) {
-	                	// TODO Auto-generated catch block
-	                	e.printStackTrace();
-	                }
+//	                try {
+//	                	//monitor.MonitorTuple("AnalyzerBolt", uuid,1, hostname, estimatedTime);
+//	                } catch (SQLException e) {
+//	                	// TODO Auto-generated catch block
+//	                	e.printStackTrace();
+//	                }
 	                
 	                collector.ack(input);
 	            }
@@ -156,6 +166,11 @@ public class AnalyzerBolt implements IRichBolt
 	        } catch (URISyntaxException e) {
 	        	collector.fail(input);
 			}
+	        catch (Exception e) {
+	        	// We catch here the rest of exceptions so the bolt does not fail and restart
+	        	log.error(e.getMessage());
+	        	collector.fail(input);
+	        }
         
     }
 

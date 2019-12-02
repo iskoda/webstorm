@@ -7,7 +7,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cz.vutbr.fit.monitoring.Monitoring;
+//import cz.vutbr.fit.monitoring.Monitoring;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.IRichBolt;
@@ -41,7 +41,7 @@ public class ExtractFeaturesBolt implements IRichBolt {
     private OutputCollector collector;
     public static final int MAX_IMAGE_DIMENSION = 1024;
     private String webstormId;
-    private Monitoring monitor;
+    //private Monitoring monitor;
     private String hostname;
 	
     
@@ -53,7 +53,7 @@ public class ExtractFeaturesBolt implements IRichBolt {
      */
 	public ExtractFeaturesBolt(String uuid) throws SQLException{
 		webstormId=uuid;
-		monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
+		//monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
 	}
 
     @SuppressWarnings("rawtypes")
@@ -118,13 +118,13 @@ public class ExtractFeaturesBolt implements IRichBolt {
 		}
     	lireFeature.extract(image);
     	byte[] feature=lireFeature.getByteArrayRepresentation();
-    	try {
-    		Long estimatedTime = System.nanoTime() - startTime;
-			monitor.MonitorTuple("ExtractFeaturesBolt", uuid,1, hostname, estimatedTime);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//    	try {
+//    		Long estimatedTime = System.nanoTime() - startTime;
+//			monitor.MonitorTuple("ExtractFeaturesBolt", uuid,1, hostname, estimatedTime);
+//		} catch (SQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
     	collector.emit(new Values(name,feature,image_data,uuid,image_url));
         collector.ack(input);
     	 

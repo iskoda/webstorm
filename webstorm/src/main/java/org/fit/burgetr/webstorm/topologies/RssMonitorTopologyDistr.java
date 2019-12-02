@@ -69,6 +69,7 @@ public class RssMonitorTopologyDistr
         builder.setBolt("FeedReaderBolt", reader, 3).shuffleGrouping("FeedUrlSpout");
         builder.setBolt("DownloaderBolt", downloader, 4).shuffleGrouping("FeedReaderBolt");
         builder.setBolt("AnalyzerBolt", analyzer, 3).shuffleGrouping("DownloaderBolt");
+        //builder.setBolt("AnalyzerBolt", analyzer, 2).shuffleGrouping("DownloaderBolt");
         builder.setBolt("ExtractFeaturesBolt", extractor, 2).globalGrouping("AnalyzerBolt", "img");
         builder.setBolt("IndexBolt", indexer,3).shuffleGrouping("ExtractFeaturesBolt");
         //builder.setBolt("nkstore", nkstore, 1).globalGrouping("analyzer", "kw");

@@ -44,7 +44,7 @@ public class FeedReaderBolt implements IRichBolt
     private static final Logger log = LoggerFactory.getLogger(FeedReaderBolt.class);
     private OutputCollector collector;
     private String webstormId;
-    private Monitoring monitor;
+    //private Monitoring monitor;
     private String hostname;
     
     
@@ -57,7 +57,7 @@ public class FeedReaderBolt implements IRichBolt
      */
     public FeedReaderBolt(String uuid) throws SQLException {
     	webstormId=uuid;
-    	monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
+    	//monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
     }
 
     @SuppressWarnings("rawtypes")
@@ -99,7 +99,7 @@ public class FeedReaderBolt implements IRichBolt
                     {
                         log.info("New entry: " + entry.getTitle() + " " + entry.getUri() + " " + entry.getPublishedDate());
                         Long estimatedTime = System.nanoTime() - startTime;
-                        monitor.MonitorTuple("FeedReaderBolt", uuid,1, hostname, estimatedTime);
+                        //monitor.MonitorTuple("FeedReaderBolt", uuid,1, hostname, estimatedTime);
                         collector.emit(new Values(entry.getUri(), entry.getTitle(),uuid));
                     }
                 }
@@ -109,7 +109,7 @@ public class FeedReaderBolt implements IRichBolt
         } 
         catch (Exception e)
         {
-            log.error("Fetch error: " + e.getMessage());
+            log.error("Fetch error: " + e);
             collector.fail(input);
         }
         

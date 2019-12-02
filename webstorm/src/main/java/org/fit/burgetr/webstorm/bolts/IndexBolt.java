@@ -48,7 +48,7 @@ import org.apache.storm.tuple.Tuple;
 
 import org.fit.burgetr.webstorm.util.*;
 
-import cz.vutbr.fit.monitoring.Monitoring;
+//import cz.vutbr.fit.monitoring.Monitoring;
 
 /**
  * A bolt that indexes images
@@ -64,7 +64,7 @@ public class IndexBolt implements IRichBolt{
     IndexWriter iw=null;
     IndexReader ir=null;
     private String webstormId;
-    private Monitoring monitor;
+    //private Monitoring monitor;
     private String hostname;
     //private OutputCollector collector;
     private float threshold;
@@ -84,7 +84,7 @@ public class IndexBolt implements IRichBolt{
      */
     public IndexBolt(String uuid) throws SQLException {
     	webstormId=uuid;
-    	monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
+    	//monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
     	lastMinute=0;
     	updateInterval=1;
     	threshold=0.7F;
@@ -108,7 +108,7 @@ public class IndexBolt implements IRichBolt{
      */
     public IndexBolt(String uuid,int ui,int t, int h, int md,boolean ram,int best) throws SQLException{
     	webstormId=uuid;
-    	monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
+    	//monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
     	lastMinute=0;
     	updateInterval=ui;
     	threshold=t;
@@ -438,13 +438,13 @@ public class IndexBolt implements IRichBolt{
 			e1.printStackTrace();
 		}
 
-        try {
-        	Long estimatedTime = System.nanoTime() - startTime;
-			monitor.MonitorTuple("IndexBolt", uuid,1, hostname, estimatedTime);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//        try {
+//        	Long estimatedTime = System.nanoTime() - startTime;
+//			monitor.MonitorTuple("IndexBolt", uuid,1, hostname, estimatedTime);
+//		} catch (SQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	}
 	
 	/**

@@ -21,7 +21,7 @@ import org.fit.burgetr.webstorm.bolts.ExtractFeaturesBolt;
 import org.fit.burgetr.webstorm.bolts.FeedReaderBolt;
 import org.fit.burgetr.webstorm.bolts.IndexBolt;
 import org.fit.burgetr.webstorm.spouts.FeedURLSpout;
-import org.mortbay.log.Log;
+//import org.mortbay.log.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,18 +31,19 @@ import org.slf4j.LoggerFactory;
  */
 public class RssMonitorTopology
 {
+	private static final Logger log = LoggerFactory.getLogger(RssMonitorTopology.class);
 
     public static void main(String[] args) throws SQLException, UnknownHostException
     {
         //logging status
-        Logger logger = LoggerFactory.getLogger(RssMonitorTopology.class);
-        logger.debug("TOPOLOGY START");
-        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        StatusPrinter.print(lc);
+        //Logger logger = LoggerFactory.getLogger(RssMonitorTopology.class);
+        //logger.debug("TOPOLOGY START");
+        //LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        //StatusPrinter.print(lc);
         
         String uuid=UUID.randomUUID().toString();
         
-        Log.info("Deployment id: "+uuid);
+        log.info("Deployment id: "+uuid);
         
         //create spouts and bolt
         FeedURLSpout urlSpout = new FeedURLSpout("http://www.fit.vutbr.cz/~burgetr/public/rss.txt",uuid);
@@ -62,6 +63,7 @@ public class RssMonitorTopology
         builder.setBolt("analyzer", analyzer, 1).shuffleGrouping("downloader");
         builder.setBolt("extractor", extractor,1).globalGrouping("analyzer", "img");
         builder.setBolt("indexer", indexer,1).shuffleGrouping("extractor");
+        
         //builder.setBolt("nkstore", nkstore, 1).globalGrouping("analyzer", "kw");
 
         Config conf = new Config();

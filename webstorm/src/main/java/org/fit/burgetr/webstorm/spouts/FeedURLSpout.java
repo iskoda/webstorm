@@ -42,7 +42,7 @@ public class FeedURLSpout extends BaseRichSpout
     private Map<String, Date> urls;
     private Iterator<Entry<String, Date>> urlIterator;
     private String listSourceUrl;
-    private Monitoring monitor;
+    //private Monitoring monitor;
     private String hostname;
     
 
@@ -56,7 +56,7 @@ public class FeedURLSpout extends BaseRichSpout
     {
         this.listSourceUrl = listSourceUrl;
         webstormId=uuid;
-        monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
+        //monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
     }
     
     @SuppressWarnings("rawtypes")
@@ -93,12 +93,12 @@ public class FeedURLSpout extends BaseRichSpout
         Entry<String, Date> entry = urlIterator.next();
         Date now = new Date();
         String uuid=UUID.randomUUID().toString();
-        try {
-			monitor.MonitorTuple("FeedUrlSpout", uuid,1, hostname);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//        try {
+//			monitor.MonitorTuple("FeedUrlSpout", uuid,1, hostname);
+//		} catch (SQLException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
         collector.emit(new Values(entry.getKey(), entry.getValue().getTime(),uuid));
         entry.setValue(now);
     }

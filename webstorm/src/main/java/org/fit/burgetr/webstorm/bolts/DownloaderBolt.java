@@ -5,7 +5,11 @@
  */
 package org.fit.burgetr.webstorm.bolts;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -24,7 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 
-import cz.vutbr.fit.monitoring.Monitoring;
+//import cz.vutbr.fit.monitoring.Monitoring;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.IRichBolt;
@@ -46,7 +50,7 @@ public class DownloaderBolt implements IRichBolt
     private static final Logger log = LoggerFactory.getLogger(DownloaderBolt.class);
     private OutputCollector collector;
     private String webstormId;
-    private Monitoring monitor;
+    //private Monitoring monitor;
     private String hostname;
     
 
@@ -58,7 +62,7 @@ public class DownloaderBolt implements IRichBolt
      */
     public DownloaderBolt(String uuid) throws SQLException {
     	webstormId=uuid;
-    	monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
+    	//monitor=new Monitoring(webstormId,"knot28.fit.vutbr.cz","webstorm","webstormdb88pass","webstorm");
     }
     
     
@@ -91,6 +95,12 @@ public class DownloaderBolt implements IRichBolt
         while ((bytesRead = stream.read(chunk)) > 0) {
             outputStream.write(chunk, 0, bytesRead);
         }
+        
+        // Write downloaded file to disk so we can simulate replays of data for benchmarking
+//        FileOutputStream fileStream = new FileOutputStream(new File("/tmp/webstorm-downloaded/" + toDownload.toString().replace('/', '-').replace('\\', '-').replace(':', '-')));
+//        fileStream.write(outputStream.toByteArray());
+//        fileStream.close();
+        
         return outputStream.toByteArray();
     }
 
@@ -129,7 +139,7 @@ public class DownloaderBolt implements IRichBolt
                 allImg.put(canonical, downloadUrl(u));
             }
             Long estimatedTime = System.nanoTime() - startTime;
-            monitor.MonitorTuple("DownloaderBolt", uuid, 1,hostname, estimatedTime);
+            //monitor.MonitorTuple("DownloaderBolt", uuid, 1,hostname, estimatedTime);
             collector.emit(new Values(title, urlstring, document.html(), allImg, uuid));
             collector.ack(input);
         } 
