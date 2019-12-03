@@ -5,6 +5,8 @@
  */
 package org.fit.burgetr.webstorm.bolts;
 
+import org.fit.burgetr.webstorm.util.StoreForReplayExperiments;
+
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -19,6 +21,7 @@ import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -53,7 +56,6 @@ public class DownloaderBolt implements IRichBolt
     //private Monitoring monitor;
     private String hostname;
     
-
     /**
      * Creates a new DownloaderBolt.
      * @param uuid the identifier of actual deployment
@@ -87,7 +89,16 @@ public class DownloaderBolt implements IRichBolt
      * @throws IOException 
      */
     private byte[] downloadUrl(URL toDownload) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    	StoreForReplayExperiments replayStore = new StoreForReplayExperiments();
+    	
+    	// Transfor url to be get from replay server
+    	String urlstring = toDownload.toString();
+        urlstring = replayStore.transformUrlToReplay(urlstring);
+        toDownload = new URL(urlstring);
+    	
+    	replayStore.downloadStarted();
+    	
+    	ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         byte[] chunk = new byte[4096];
         int bytesRead;
         InputStream stream = toDownload.openStream();
@@ -95,11 +106,10 @@ public class DownloaderBolt implements IRichBolt
         while ((bytesRead = stream.read(chunk)) > 0) {
             outputStream.write(chunk, 0, bytesRead);
         }
-        
-        // Write downloaded file to disk so we can simulate replays of data for benchmarking
-//        FileOutputStream fileStream = new FileOutputStream(new File("/tmp/webstorm-downloaded/" + toDownload.toString().replace('/', '-').replace('\\', '-').replace(':', '-')));
-//        fileStream.write(outputStream.toByteArray());
-//        fileStream.close();
+
+        // Save data for later replay in experiments
+        replayStore.downloadEnded();
+        replayStore.saveForReplay(toDownload.toString(), outputStream.toByteArray());
         
         return outputStream.toByteArray();
     }
@@ -109,9 +119,12 @@ public class DownloaderBolt implements IRichBolt
     {
     	long startTime = System.nanoTime();
     	
+    	StoreForReplayExperiments replayStore = new StoreForReplayExperiments();
+    	
         String urlstring = input.getString(0);
         String title = input.getString(1);
         String uuid = input.getString(2);
+        
         DateTime now = DateTime.now();
         String dateString=String.valueOf(now.getYear())+"-"+String.valueOf(now.getMonthOfYear())+"-"+String.valueOf(now.getDayOfMonth())+"-"+String.valueOf(now.getHourOfDay())+"-"+String.valueOf(now.getMinuteOfHour())+"-"+String.valueOf(now.getSecondOfMinute())+"-"+String.valueOf(now.getMillisOfSecond());
         log.info("DateTime:"+dateString+", Downloading url: " + urlstring+" ("+uuid+")");
@@ -128,9 +141,20 @@ public class DownloaderBolt implements IRichBolt
 
             HashMap<String,byte[]> allImg=new HashMap<String,byte[]>();
 
+         // Transfor url to be get from replay server
+            urlstring = replayStore.transformUrlToReplay(urlstring);
+            
+            // Download and parse HTML document
+            replayStore.downloadStarted();
             Document document = (Document) Jsoup.connect(urlstring).get();
+            replayStore.downloadEnded();
+            // Prepare map of images in the document
             Elements images = document.select("img[src~=(?i)\\.(png|jpe?g|gif)]");
 
+            // Save data for later replay in experiments
+            replayStore.saveForReplay(urlstring, document.outerHtml().getBytes());
+            
+            // Iterate image tags and download 'em
             for (Element image : images) {
                 String src=image.attr("src");
                 URL u = new URL(src);
@@ -139,8 +163,10 @@ public class DownloaderBolt implements IRichBolt
                 allImg.put(canonical, downloadUrl(u));
             }
             Long estimatedTime = System.nanoTime() - startTime;
+            
             //monitor.MonitorTuple("DownloaderBolt", uuid, 1,hostname, estimatedTime);
-            collector.emit(new Values(title, urlstring, document.html(), allImg, uuid));
+            
+            //collector.emit(new Values(title, urlstring, document.html(), allImg, uuid));
             collector.ack(input);
         } 
         catch (Exception e)

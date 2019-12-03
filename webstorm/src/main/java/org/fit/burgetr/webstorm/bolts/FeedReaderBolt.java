@@ -5,6 +5,7 @@
  */
 package org.fit.burgetr.webstorm.bolts;
 
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
@@ -30,6 +31,7 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
+import org.fit.burgetr.webstorm.util.StoreForReplayExperiments;
 
 /**
  * A bolt that decodes a feed at the given URL and extracts new entries
@@ -76,18 +78,42 @@ public class FeedReaderBolt implements IRichBolt
     @Override
     public void execute(Tuple input)
     {
+    	StoreForReplayExperiments replayStore = new StoreForReplayExperiments();
+    	
     	long startTime = System.nanoTime();
     	
         String urlstring = input.getString(0);
         Date date = new Date(input.getLong(1));
         String uuid=input.getString(2);
         
-        log.info("Processing url: " + urlstring + " last modified on " + date);
+        log.info("Processing RSS feed: " + urlstring + " last modified on " + date);
+        
+        // Count number of urls in RSS feed to eliminate empty or problematic feeds
+        int emmitedFromFeed = 0;
         
         try
         {
             FeedFetcher feedFetcher = new HttpURLFeedFetcher();
+            
+            // Transfor url to be get from replay server
+            urlstring = replayStore.transformUrlToReplay(urlstring);
+            
             SyndFeed feed = feedFetcher.retrieveFeed(new URL(urlstring));
+            
+            replayStore.downloadStarted();
+            // Read rss feed on our own as feed cannot be returned back in xml
+            StringBuilder feedXmlData = new StringBuilder();
+            byte[] buf = new byte[1024];
+            int length;
+            try (InputStream is = (new URL(urlstring)).openStream()) {
+              while ((length = is.read(buf)) != -1) {
+            	  feedXmlData.append(new String(buf, 0, length));
+              }
+            }
+            replayStore.downloadEnded();
+                 
+            // Save data for later replay in experiments
+            replayStore.saveForReplay(urlstring, feedXmlData.toString().getBytes());
             
             List<?> entries = feed.getEntries();
             for (Object e : entries)
@@ -95,13 +121,16 @@ public class FeedReaderBolt implements IRichBolt
                 if (e instanceof SyndEntry)
                 {
                     SyndEntry entry = (SyndEntry) e;
-                    if (date.compareTo(entry.getPublishedDate()) <= 0)
-                    {
-                        log.info("New entry: " + entry.getTitle() + " " + entry.getUri() + " " + entry.getPublishedDate());
+                    
+                    // 
+//                    if (date.compareTo(entry.getPublishedDate()) <= 0) // Probably limiting to new records - for testing just ignore
+//                    {
+                        //log.info("New entry: " + entry.getTitle() + " " + entry.getUri() + " " + entry.getPublishedDate());
                         Long estimatedTime = System.nanoTime() - startTime;
                         //monitor.MonitorTuple("FeedReaderBolt", uuid,1, hostname, estimatedTime);
                         collector.emit(new Values(entry.getUri(), entry.getTitle(),uuid));
-                    }
+                        emmitedFromFeed ++;
+//                    }
                 }
             }
             
@@ -110,8 +139,14 @@ public class FeedReaderBolt implements IRichBolt
         catch (Exception e)
         {
             log.error("Fetch error: " + e);
+            if(emmitedFromFeed == 0) { // Print stack for useless (empty) RSS feeds
+            	//e.printStackTrace();
+            }
             collector.fail(input);
         }
+        finally {
+        	log.info("RSS feed emmited " + emmitedFromFeed + " URLs. RSS feed: " + urlstring);
+		}
         
     }
 

@@ -26,6 +26,9 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
+import org.fit.burgetr.webstorm.bolts.FeedReaderBolt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A spouts that reads a list of feed urls and emits the urls repeatedly together with last fetch date.
@@ -38,6 +41,7 @@ public class FeedURLSpout extends BaseRichSpout
 
     private static final long serialVersionUID = 1L;
     private String webstormId;
+    private static final Logger log = LoggerFactory.getLogger(FeedReaderBolt.class);
     private SpoutOutputCollector collector;
     private Map<String, Date> urls;
     private Iterator<Entry<String, Date>> urlIterator;
@@ -85,10 +89,13 @@ public class FeedURLSpout extends BaseRichSpout
             {
                 try
                 {
-                    Thread.sleep(1000); //wait 1 second in order not to repeat the whole list with the same times
+                	
+                    //Thread.sleep(1000); //wait 1 second in order not to repeat the whole list with the same times
+                	Thread.sleep(1000 * 3600); // For downloading for replay, we use just emmit once
                 } catch (InterruptedException e) {}
             }
             urlIterator = urls.entrySet().iterator();
+            log.info("RSS feed list starting from begining.");
         }
         Entry<String, Date> entry = urlIterator.next();
         Date now = new Date();

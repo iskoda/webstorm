@@ -54,7 +54,7 @@ public class RssMonitorTopologyDistr
         
         //create spouts and bolt
         //FeedURLSpout urlSpout = new FeedURLSpout("http://www.fit.vutbr.cz/~burgetr/public/rss.txt",uuid);
-        FeedURLSpout urlSpout = new FeedURLSpout("http://valentine.farmacie.cz/~skoda/juniper/rss.txt",uuid);
+        FeedURLSpout urlSpout = new FeedURLSpout("https://www.adaptine.com/_iskoda_webstorm/rss.txt",uuid);
         FeedReaderBolt reader = new FeedReaderBolt(uuid);
         DownloaderBolt downloader = new DownloaderBolt(uuid);
         AnalyzerBolt analyzer = new AnalyzerBolt("kw","img",uuid);
@@ -75,8 +75,8 @@ public class RssMonitorTopologyDistr
         //builder.setBolt("nkstore", nkstore, 1).globalGrouping("analyzer", "kw");
 
         Config conf = new Config();
-        conf.setDebug(true);
-        conf.put(Config.TOPOLOGY_DEBUG, true);
+        //conf.setDebug(true); // Enabling this, you get all transferred messages to be logged
+        //conf.put(Config.TOPOLOGY_DEBUG, true); // Enabling this, you get all transferred messages to be logged (probably same as previous line - setDebug(true)
         conf.setNumWorkers(8);
         conf.setMaxSpoutPending(5000);
         
