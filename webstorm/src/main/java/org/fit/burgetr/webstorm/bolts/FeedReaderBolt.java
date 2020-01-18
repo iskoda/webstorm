@@ -86,7 +86,7 @@ public class FeedReaderBolt implements IRichBolt
         Date date = new Date(input.getLong(1));
         String uuid=input.getString(2);
         
-        log.info("Processing RSS feed: " + urlstring + " last modified on " + date);
+        //log.info("Processing RSS feed: " + urlstring + " last modified on " + date);
         
         // Count number of urls in RSS feed to eliminate empty or problematic feeds
         int emmitedFromFeed = 0;
@@ -100,6 +100,10 @@ public class FeedReaderBolt implements IRichBolt
             
             SyndFeed feed = feedFetcher.retrieveFeed(new URL(urlstring));
             
+            /*
+            //   
+            // Used only to store data from real servers for replaying
+            //
             replayStore.downloadStarted();
             // Read rss feed on our own as feed cannot be returned back in xml
             StringBuilder feedXmlData = new StringBuilder();
@@ -114,6 +118,8 @@ public class FeedReaderBolt implements IRichBolt
                  
             // Save data for later replay in experiments
             replayStore.saveForReplay(urlstring, feedXmlData.toString().getBytes());
+            
+            */
             
             List<?> entries = feed.getEntries();
             for (Object e : entries)

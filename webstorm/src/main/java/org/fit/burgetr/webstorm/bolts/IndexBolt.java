@@ -39,7 +39,7 @@ import org.apache.lucene.search.*;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.apache.storm.shade.org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.IRichBolt;
@@ -54,7 +54,7 @@ import org.fit.burgetr.webstorm.util.*;
  * A bolt that indexes images
  * Accepts: (name, feature,image_data,uuid,image_url)
  * 
- * @author ikouril
+ * @author ikouril, iskoda
  */
 public class IndexBolt implements IRichBolt{
 	private static final long serialVersionUID = 1L;
@@ -66,7 +66,7 @@ public class IndexBolt implements IRichBolt{
     private String webstormId;
     //private Monitoring monitor;
     private String hostname;
-    //private OutputCollector collector;
+    private OutputCollector collector;
     private float threshold;
     private int lastMinute;
     private int history;
@@ -124,6 +124,8 @@ public class IndexBolt implements IRichBolt{
 			OutputCollector collector) 
 	{
 		int nodeId;
+		
+		this.collector = collector;
 		
 		synchronized(instances){
 			nodeId=++instances;
@@ -433,11 +435,17 @@ public class IndexBolt implements IRichBolt{
 
         try {
 			ir.close();
+			collector.ack(input);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			//e1.printStackTrace();
+			log.error("Tuple failed: " + e1 + " | " + e1.getMessage() + " | " + ExceptionUtils.getStackTrace(e1));
 		}
+        
+        // We probably want to ack always as if we do not ack, tuple is stored in previous bolt
+        collector.ack(input);
 
+        
 //        try {
 //        	Long estimatedTime = System.nanoTime() - startTime;
 //			monitor.MonitorTuple("IndexBolt", uuid,1, hostname, estimatedTime);

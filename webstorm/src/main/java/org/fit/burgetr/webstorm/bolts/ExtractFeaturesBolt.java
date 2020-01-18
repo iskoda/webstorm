@@ -79,8 +79,10 @@ public class ExtractFeaturesBolt implements IRichBolt {
         byte[] image_data=input.getBinary(2);
         String uuid=input.getString(3);
         DateTime now = DateTime.now();
-        String dateString=String.valueOf(now.getYear())+"-"+String.valueOf(now.getMonthOfYear())+"-"+String.valueOf(now.getDayOfMonth())+"-"+String.valueOf(now.getHourOfDay())+"-"+String.valueOf(now.getMinuteOfHour())+"-"+String.valueOf(now.getSecondOfMinute())+"-"+String.valueOf(now.getMillisOfSecond());
-        log.info("DateTime:"+dateString+", Extracting features of image from url: " + image_url+" (originating from document with uuid: "+uuid+")");
+        //String dateString=String.valueOf(now.getYear())+"-"+String.valueOf(now.getMonthOfYear())+"-"+String.valueOf(now.getDayOfMonth())+"-"+String.valueOf(now.getHourOfDay())+"-"+String.valueOf(now.getMinuteOfHour())+"-"+String.valueOf(now.getSecondOfMinute())+"-"+String.valueOf(now.getMillisOfSecond());
+        log.info(/*"DateTime:"+dateString+*/"Extracting features of image from url: " 
+        		+ image_url+" (originating from document with uuid: "+uuid+")"
+        		);
 
         /*
     	URL url = null;

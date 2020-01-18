@@ -30,7 +30,7 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
-
+import org.apache.storm.shade.org.apache.commons.lang.exception.ExceptionUtils;
 //import cz.vutbr.fit.monitoring.Monitoring;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
@@ -88,7 +88,8 @@ public class DownloaderBolt implements IRichBolt
      * @param toDownload the url of page to be downloaded
      * @throws IOException 
      */
-    private byte[] downloadUrl(URL toDownload) throws IOException {
+    private byte[] downloadUrl(URL toDownload) throws IOException 
+    {
     	StoreForReplayExperiments replayStore = new StoreForReplayExperiments();
     	
     	// Transfor url to be get from replay server
@@ -96,7 +97,7 @@ public class DownloaderBolt implements IRichBolt
         urlstring = replayStore.transformUrlToReplay(urlstring);
         toDownload = new URL(urlstring);
     	
-    	replayStore.downloadStarted();
+    	//replayStore.downloadStarted();
     	
     	ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         byte[] chunk = new byte[4096];
@@ -108,8 +109,8 @@ public class DownloaderBolt implements IRichBolt
         }
 
         // Save data for later replay in experiments
-        replayStore.downloadEnded();
-        replayStore.saveForReplay(toDownload.toString(), outputStream.toByteArray());
+        //replayStore.downloadEnded();
+        //replayStore.saveForReplay(toDownload.toString(), outputStream.toByteArray());
         
         return outputStream.toByteArray();
     }
@@ -121,13 +122,14 @@ public class DownloaderBolt implements IRichBolt
     	
     	StoreForReplayExperiments replayStore = new StoreForReplayExperiments();
     	
-        String urlstring = input.getString(0);
+    	String originalUrl;
+    	String urlstring = originalUrl = input.getString(0);
         String title = input.getString(1);
         String uuid = input.getString(2);
         
         DateTime now = DateTime.now();
         String dateString=String.valueOf(now.getYear())+"-"+String.valueOf(now.getMonthOfYear())+"-"+String.valueOf(now.getDayOfMonth())+"-"+String.valueOf(now.getHourOfDay())+"-"+String.valueOf(now.getMinuteOfHour())+"-"+String.valueOf(now.getSecondOfMinute())+"-"+String.valueOf(now.getMillisOfSecond());
-        log.info("DateTime:"+dateString+", Downloading url: " + urlstring+" ("+uuid+")");
+        //log.info("DateTime:"+dateString+", Downloading url: " + urlstring+" ("+uuid+")");
         
         try
         {
@@ -141,37 +143,45 @@ public class DownloaderBolt implements IRichBolt
 
             HashMap<String,byte[]> allImg=new HashMap<String,byte[]>();
 
-         // Transfor url to be get from replay server
+            // Transform url to be get from replay server
             urlstring = replayStore.transformUrlToReplay(urlstring);
             
             // Download and parse HTML document
-            replayStore.downloadStarted();
+            //replayStore.downloadStarted();
             Document document = (Document) Jsoup.connect(urlstring).get();
-            replayStore.downloadEnded();
+            //replayStore.downloadEnded();
             // Prepare map of images in the document
             Elements images = document.select("img[src~=(?i)\\.(png|jpe?g|gif)]");
 
             // Save data for later replay in experiments
-            replayStore.saveForReplay(urlstring, document.outerHtml().getBytes());
+            //replayStore.saveForReplay(urlstring, document.outerHtml().getBytes());
             
             // Iterate image tags and download 'em
             for (Element image : images) {
                 String src=image.attr("src");
-                URL u = new URL(src);
-                URI uri = new URI(u.getProtocol(), u.getUserInfo(), u.getHost(), u.getPort(), u.getPath(), u.getQuery(), u.getRef());
-                String canonical = uri.toString();
-                allImg.put(canonical, downloadUrl(u));
+                try {
+	                URL u = new URL(src);
+	                URI uri = new URI(u.getProtocol(), u.getUserInfo(), u.getHost(), u.getPort(), u.getPath(), u.getQuery(), u.getRef());
+	                String canonical = uri.toString();
+                
+                	allImg.put(canonical, downloadUrl(u));
+                }
+                catch(IOException e) {
+                	//log.info("Fetch image failed: " + e.getMessage() + " URL: " + u);
+                }
             }
             Long estimatedTime = System.nanoTime() - startTime;
             
             //monitor.MonitorTuple("DownloaderBolt", uuid, 1,hostname, estimatedTime);
             
-            //collector.emit(new Values(title, urlstring, document.html(), allImg, uuid));
+            collector.emit(new Values(title, urlstring, document.html(), allImg, uuid));
             collector.ack(input);
         } 
         catch (Exception e)
         {
-            log.error("Fetch error: " + e.getMessage());
+            log.warn("Fetch error: " + e.getClass() + " " + e.getMessage() + " URL: " + urlstring);
+        	//log.error("Fetch error: " + ExceptionUtils.getStackTrace(e) + " Original URL:" + originalUrl);
+        	//log.error("Fetch error: " + " Original URL:" + originalUrl);
             collector.fail(input);
         }
         

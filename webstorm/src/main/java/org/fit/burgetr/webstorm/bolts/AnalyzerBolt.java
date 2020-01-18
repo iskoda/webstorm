@@ -26,7 +26,8 @@ import org.fit.burgetr.webstorm.util.LogicalTagLookup;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.apache.storm.shade.org.apache.commons.lang.exception.ExceptionUtils;
+//import org.apache.commons.lang.exception.ExceptionUtils;
 //import cz.vutbr.fit.monitoring.Monitoring;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
@@ -41,7 +42,7 @@ import org.apache.storm.tuple.Values;
  * Accepts: (title, base_url, html_code, extracted_images, tuple_uuid )
  * Emits: (name, keyword, base_url)+
  *        (name, image_url, base_url, image_data, tuple_uuid)+
- * @author burgetr and ikouril
+ * @author burgetr, ikouril, iskoda
  */
 public class AnalyzerBolt implements IRichBolt
 {
@@ -98,7 +99,9 @@ public class AnalyzerBolt implements IRichBolt
 	        String dateString=String.valueOf(now.getYear())+"-"+String.valueOf(now.getMonthOfYear())+"-"+String.valueOf(now.getDayOfMonth())+"-"+String.valueOf(now.getHourOfDay())+"-"+String.valueOf(now.getMinuteOfHour())+"-"+String.valueOf(now.getSecondOfMinute())+"-"+String.valueOf(now.getMillisOfSecond());
 	        log.info("DateTime:"+dateString+", Analyzing url: " + baseurl+" ("+uuid+")");
 	        
-	        // Truncate too long HTMLs - as it probably breaks processing sometimes??
+	        //
+	        // Truncate too long HTMLs - as it probably breaks processing sometimes?? - the problem is with great amount of memory required
+	        //
 	        int maxLength = 120000;
 	        if (html != null && html.length() > maxLength) {
 	        	html = html.substring(0, maxLength);
@@ -106,71 +109,82 @@ public class AnalyzerBolt implements IRichBolt
 	        }
 	        
 	        // Start all analyzing stuff
-//	        try
-//	        {
-//	            LogicalTagLookup lookup = processUrl(html, new URL(baseurl));
-//	            Map<String, Set<String>> keywords = extractKeywords(lookup);
-//	            Map<String, Set<URL>> images = extractImages(lookup);
-//	            if (images!=null && keywords != null)
-//	            {
-//	                //emit name-keyword tuples
-//	                for (Map.Entry<String, Set<String>> entry : keywords.entrySet())
-//	                {
-//	                    String name = entry.getKey();
-//	                    for (String keyword : entry.getValue())
-//	                    {
-//	                        if (!keyword.equals(name)){
-////	                        	try {
-////									//monitor.MonitorTuple("AnalyzerBolt", uuid,1, hostname);
-////								} catch (SQLException e) {
-////									// TODO Auto-generated catch block
-////									e.printStackTrace();
-////								}
-//	                            collector.emit(kwStreamId, new Values(name, keyword, baseurl));
-//	                        }
-//	                    }
+	        try
+	        {
+	            LogicalTagLookup lookup = processUrl(html, new URL(baseurl));
+	            Map<String, Set<String>> keywords = extractKeywords(lookup);
+	            Map<String, Set<URL>> images = extractImages(lookup);
+	            if (images!=null && keywords != null)
+	            {
+	                //emit name-keyword tuples
+	                for (Map.Entry<String, Set<String>> entry : keywords.entrySet())
+	                {
+	                    String name = entry.getKey();
+	                    for (String keyword : entry.getValue())
+	                    {
+	                        if (!keyword.equals(name)){
+//	                        	try {
+//									//monitor.MonitorTuple("AnalyzerBolt", uuid,1, hostname);
+//								} catch (SQLException e) {
+//									// TODO Auto-generated catch block
+//									e.printStackTrace();
+//								}
+	                            collector.emit(kwStreamId, new Values(name, keyword, baseurl));
+	                        }
+	                    }
+	                }
+	                //emit name-image tuples
+	                
+	                for (Map.Entry<String, Set<URL>> entry : images.entrySet())
+	                {
+	                    String name = entry.getKey();
+	                    for (URL url : entry.getValue())
+	                    {
+	                    	URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+	                        String canonical = uri.toString();
+	                        byte[] image_data=allImg.get(canonical);
+	                        
+	                        if (image_data!=null){
+	                        	collector.emit(imgStreamId, new Values(name, url.toString(), image_data,uuid));
+	                        }
+	                    }
+	                }
+	                
+	                Long estimatedTime = System.nanoTime() - startTime;
+//	                try {
+//	                	//monitor.MonitorTuple("AnalyzerBolt", uuid,1, hostname, estimatedTime);
+//	                } catch (SQLException e) {
+//	                	// TODO Auto-generated catch block
+//	                	e.printStackTrace();
 //	                }
-//	                //emit name-image tuples
-//	                
-//	                for (Map.Entry<String, Set<URL>> entry : images.entrySet())
-//	                {
-//	                    String name = entry.getKey();
-//	                    for (URL url : entry.getValue())
-//	                    {
-//	                    	URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
-//	                        String canonical = uri.toString();
-//	                        byte[] image_data=allImg.get(canonical);
-//	                        
-//	                        if (image_data!=null){
-//	                        	collector.emit(imgStreamId, new Values(name, url.toString(), image_data,uuid));
-//	                        }
-//	                    }
-//	                }
-//	                
-//	                Long estimatedTime = System.nanoTime() - startTime;
-////	                try {
-////	                	//monitor.MonitorTuple("AnalyzerBolt", uuid,1, hostname, estimatedTime);
-////	                } catch (SQLException e) {
-////	                	// TODO Auto-generated catch block
-////	                	e.printStackTrace();
-////	                }
-//	                
-//	                collector.ack(input);
-//	            }
-//	            else
-//	                collector.fail(input);
-//	        }
-//	        catch (MalformedURLException e)
-//	        {
-//	            collector.fail(input);
-//	        } catch (URISyntaxException e) {
-//	        	collector.fail(input);
-//			}
-//	        catch (Exception e) {
-//	        	// We catch here the rest of exceptions so the bolt does not fail and restart
-//	        	log.error(e.getMessage());
-//	        	collector.fail(input);
-//	        }
+	                
+	                collector.ack(input);
+	            }
+	            else {
+	            	log.error("Tuple failed - no images and no keywords.");
+	                collector.fail(input);
+	            }
+	        }
+	        catch (NullPointerException e)
+	        {
+	        	// Do not log this as it usually means that there was no data passed from Segmentator
+	        	//log.error("Tuple failed: NullPointerException");
+	        	//log.error("Tuple failed: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
+	        }
+	        catch (MalformedURLException e)
+	        {
+	        	//log.error("Tuple failed: malformed URL.");
+	            collector.fail(input);
+	        } catch (URISyntaxException e) {
+	        	//log.error("Tuple failed: URI syntax error.");
+	        	collector.fail(input);
+			}
+	        catch (Exception e) {
+	        	// We catch here the rest of exceptions so the bolt does not fail and restart
+	        	log.error("Tuple failed: " + e + " | " + e.getMessage());
+	        	//log.error("Tuple failed: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
+	        	collector.fail(input);
+	        }
         
     }
 
@@ -205,11 +219,19 @@ public class AnalyzerBolt implements IRichBolt
             Segmentator segm = new Segmentator();
             segm.segmentInputStream(is, baseurl);
             LogicalTagLookup lookup = new LogicalTagLookup(segm.getLogicalTree());
+            log.info("Lookup found: " + lookup);
             return lookup;
-        } catch (Exception e)
+        } 
+        catch (NullPointerException e) {
+        	// Skip this log as it happens often - why??
+        	//log.error("Segmentator NullPointerException: " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
+        	
+            return null;
+        }
+        catch (Throwable e)
         {
             //e.printStackTrace();
-            log.error(e.getMessage());
+            log.error("Throwable: " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
             return null;
         }
     }

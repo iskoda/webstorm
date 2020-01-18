@@ -90,15 +90,15 @@ public class FeedURLSpout extends BaseRichSpout
                 try
                 {
                 	
-                    //Thread.sleep(1000); //wait 1 second in order not to repeat the whole list with the same times
-                	Thread.sleep(1000 * 3600); // For downloading for replay, we use just emmit once
+                    Thread.sleep(1000); //wait 1 second in order not to repeat the whole list with the same times
+                	//Thread.sleep(1000 * 3600); // When we are downloading for later replay, we use just emit once
                 } catch (InterruptedException e) {}
             }
             urlIterator = urls.entrySet().iterator();
             log.info("RSS feed list starting from begining.");
         }
         Entry<String, Date> entry = urlIterator.next();
-        Date now = new Date();
+        //Date now = new Date();
         String uuid=UUID.randomUUID().toString();
 //        try {
 //			monitor.MonitorTuple("FeedUrlSpout", uuid,1, hostname);
@@ -107,7 +107,7 @@ public class FeedURLSpout extends BaseRichSpout
 //			e.printStackTrace();
 //		}
         collector.emit(new Values(entry.getKey(), entry.getValue().getTime(),uuid));
-        entry.setValue(now);
+        //entry.setValue(now);
     }
 
     @Override

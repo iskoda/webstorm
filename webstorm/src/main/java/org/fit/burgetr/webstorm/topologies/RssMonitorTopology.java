@@ -41,10 +41,9 @@ public class RssMonitorTopology
 	 * download same stuff.
 	 * 
 	 * @param args
-	 * @throws SQLException
-	 * @throws UnknownHostException
+	 * @throws Exception 
 	 */
-    public static void main(String[] args) throws SQLException, UnknownHostException
+    public static void main(String[] args) throws Exception
     {
         //logging status
         //Logger logger = LoggerFactory.getLogger(RssMonitorTopology.class);

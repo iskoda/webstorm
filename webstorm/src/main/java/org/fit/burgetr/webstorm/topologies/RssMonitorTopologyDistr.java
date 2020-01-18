@@ -54,7 +54,8 @@ public class RssMonitorTopologyDistr
         
         //create spouts and bolt
         //FeedURLSpout urlSpout = new FeedURLSpout("http://www.fit.vutbr.cz/~burgetr/public/rss.txt",uuid);
-        FeedURLSpout urlSpout = new FeedURLSpout("https://www.adaptine.com/_iskoda_webstorm/rss.txt",uuid);
+        //FeedURLSpout urlSpout = new FeedURLSpout("https://www.adaptine.com/_iskoda_webstorm/rss.txt",uuid);
+        FeedURLSpout urlSpout = new FeedURLSpout("https://www.adaptine.com/_iskoda_webstorm/rss-live.txt",uuid);
         FeedReaderBolt reader = new FeedReaderBolt(uuid);
         DownloaderBolt downloader = new DownloaderBolt(uuid);
         AnalyzerBolt analyzer = new AnalyzerBolt("kw","img",uuid);
@@ -68,8 +69,8 @@ public class RssMonitorTopologyDistr
         builder.setSpout("FeedUrlSpout", urlSpout, 4);
         builder.setBolt("FeedReaderBolt", reader, 3).shuffleGrouping("FeedUrlSpout");
         builder.setBolt("DownloaderBolt", downloader, 4).shuffleGrouping("FeedReaderBolt");
-        builder.setBolt("AnalyzerBolt", analyzer, 3).shuffleGrouping("DownloaderBolt");
-        //builder.setBolt("AnalyzerBolt", analyzer, 2).shuffleGrouping("DownloaderBolt");
+        //builder.setBolt("AnalyzerBolt", analyzer, 3).shuffleGrouping("DownloaderBolt");
+        builder.setBolt("AnalyzerBolt", analyzer, 2).shuffleGrouping("DownloaderBolt");
         builder.setBolt("ExtractFeaturesBolt", extractor, 2).globalGrouping("AnalyzerBolt", "img");
         builder.setBolt("IndexBolt", indexer,3).shuffleGrouping("ExtractFeaturesBolt");
         //builder.setBolt("nkstore", nkstore, 1).globalGrouping("analyzer", "kw");
@@ -85,6 +86,7 @@ public class RssMonitorTopologyDistr
         //conf.put("placement.analyzer", "blade6.blades");
         //conf.put("placement.reader", "knot27.fit.vutbr.cz");
         //conf.put("placement.downloader", "blade5.blades");
+        
         
         // Benchmark scheduler behavior
         conf.put("advisor.noMoreReschedulesAfterPerformance", 1); // Do not reschedule any more when performance schedule is run
