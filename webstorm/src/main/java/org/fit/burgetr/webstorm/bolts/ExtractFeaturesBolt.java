@@ -106,17 +106,17 @@ public class ExtractFeaturesBolt implements IRichBolt {
 			image = ImageIO.read(in);
 		} catch (IOException e) {
 			log.error("Corrupted image: " + e.getMessage());
-            collector.fail(input);
+            //collector.fail(input);
 		}
     	LireFeature lireFeature = null;
 		try {
 			lireFeature = CEDD.class.newInstance();
 		} catch (InstantiationException e) {
 			log.error("Lire instantiation error: " + e.getMessage());
-            collector.fail(input);
+            //collector.fail(input);
 		} catch (IllegalAccessException e) {
 			log.error("Lire illegal access error: " + e.getMessage());
-            collector.fail(input);
+            //collector.fail(input);
 		}
     	lireFeature.extract(image);
     	byte[] feature=lireFeature.getByteArrayRepresentation();
@@ -127,8 +127,10 @@ public class ExtractFeaturesBolt implements IRichBolt {
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
+    	
     	collector.emit(new Values(name,feature,image_data,uuid,image_url));
-        collector.ack(input);
+        
+    	collector.ack(input);
     	 
     }
 

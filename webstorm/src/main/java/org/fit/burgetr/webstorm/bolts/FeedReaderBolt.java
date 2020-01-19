@@ -148,11 +148,14 @@ public class FeedReaderBolt implements IRichBolt
             if(emmitedFromFeed == 0) { // Print stack for useless (empty) RSS feeds
             	//e.printStackTrace();
             }
-            collector.fail(input);
+            //collector.fail(input);
         }
         finally {
         	log.info("RSS feed emmited " + emmitedFromFeed + " URLs. RSS feed: " + urlstring);
 		}
+        
+        
+        collector.ack(input);
         
     }
 

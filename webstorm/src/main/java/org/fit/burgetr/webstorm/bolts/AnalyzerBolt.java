@@ -158,11 +158,11 @@ public class AnalyzerBolt implements IRichBolt
 //	                	e.printStackTrace();
 //	                }
 	                
-	                collector.ack(input);
+	                //collector.ack(input);
 	            }
 	            else {
 	            	log.error("Tuple failed - no images and no keywords.");
-	                collector.fail(input);
+	                //collector.fail(input);
 	            }
 	        }
 	        catch (NullPointerException e)
@@ -174,27 +174,35 @@ public class AnalyzerBolt implements IRichBolt
 	        catch (MalformedURLException e)
 	        {
 	        	//log.error("Tuple failed: malformed URL.");
-	            collector.fail(input);
+	            //collector.fail(input);
 	        } catch (URISyntaxException e) {
 	        	//log.error("Tuple failed: URI syntax error.");
-	        	collector.fail(input);
+	        	//collector.fail(input);
 			}
 	        catch (Exception e) {
 	        	// We catch here the rest of exceptions so the bolt does not fail and restart
 	        	log.error("Tuple failed: " + e + " | " + e.getMessage());
 	        	//log.error("Tuple failed: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
-	        	collector.fail(input);
+	        	//collector.fail(input);
 	        }
         
+        collector.ack(input);
+	        
     }
 
     public void cleanup()
     {
     }
 
+    /**
+     * Describes names of fields contained in tuple emmited and 
+     * describes streams.
+     */
     public void declareOutputFields(OutputFieldsDeclarer declarer)
     {
-        declarer.declareStream(kwStreamId, new Fields("name", "keyword", "baseurl"));
+        declarer.declare(new Fields("name", "keyword", "baseurl"));
+        
+    	declarer.declareStream(kwStreamId, new Fields("name", "keyword", "baseurl"));
         declarer.declareStream(imgStreamId, new Fields("name", "image_url", "image_bytes","uuid"));
     }
 

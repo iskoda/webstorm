@@ -110,10 +110,10 @@ public class FeedURLSpout extends BaseRichSpout
         //entry.setValue(now);
     }
 
-    @Override
-    public void ack(Object id)
-    {
-    }
+//    @Override
+//    public void ack(Object id)
+//    {
+//    }
 
     @Override
     public void fail(Object id)

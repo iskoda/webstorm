@@ -157,7 +157,8 @@ public class IndexBolt implements IRichBolt{
 						directory=FSDirectory.open(f);
 					} catch (IOException e) {
 						directory=new RAMDirectory();
-						e.printStackTrace();
+						//e.printStackTrace();
+						log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 					}
 				}
 			}
@@ -166,14 +167,16 @@ public class IndexBolt implements IRichBolt{
 					iw = new IndexWriter(directory, conf);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
+					log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 				}
 			}
 			try {
 				iw.commit();
-			} catch (IOException e1) {
+			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				//e.printStackTrace();
+				log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 			}
 			
 	}
@@ -193,9 +196,10 @@ public class IndexBolt implements IRichBolt{
         BufferedImage image=null;
 		try {
 			image = ImageIO.read(new ByteArrayInputStream(imageData));
-		} catch (IOException e1) {
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			//e1.printStackTrace();
+			log.error("Cannot read image: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 		}
         DateTime now = DateTime.now();
         String dateString=String.valueOf(now.getYear())+"-"+String.valueOf(now.getMonthOfYear())+"-"+String.valueOf(now.getDayOfMonth())+"-"+String.valueOf(now.getHourOfDay())+"-"+String.valueOf(now.getMinuteOfHour())+"-"+String.valueOf(now.getSecondOfMinute())+"-"+String.valueOf(now.getMillisOfSecond());
@@ -208,7 +212,8 @@ public class IndexBolt implements IRichBolt{
 			ir = IndexReader.open(directory);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			log.error("Cannot open index: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 		}
         
         if (updateWeights){
@@ -219,7 +224,8 @@ public class IndexBolt implements IRichBolt{
 					doc = ir.document(i);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
+					log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 				}
 				int length=0;
 				IndexableField lengthField=doc.getField("length");
@@ -258,7 +264,8 @@ public class IndexBolt implements IRichBolt{
 					iw.updateDocument(t, doc);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
+					log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 				}
 
             	log.info("Updating document "+myid+": "+logString);
@@ -269,7 +276,8 @@ public class IndexBolt implements IRichBolt{
 				iw.commit();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//e.printStackTrace();
+				log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 			}
         }
         
@@ -277,7 +285,8 @@ public class IndexBolt implements IRichBolt{
 			ir = IndexReader.open(directory);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			log.error("Error while updating weights: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 		}
         
         //compare threshold with 10 best matches
@@ -285,9 +294,10 @@ public class IndexBolt implements IRichBolt{
         ImageSearchHits hits=null;
         try {
 			hits = searcher.search(image, ir);
-		} catch (IOException e1) {
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			//e1.printStackTrace();
+			log.error("Error while searching: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 
 		}
         
@@ -322,7 +332,8 @@ public class IndexBolt implements IRichBolt{
 					iw.commit();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
+					log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 				}
 
             }
@@ -350,21 +361,24 @@ public class IndexBolt implements IRichBolt{
 			iw.addDocument(document);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 		}
         try {
         	ir.close();
 			iw.commit();
-		} catch (IOException e2) {
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e2.printStackTrace();
+			//e.printStackTrace();
+			log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 		}
 
         try {
 			ir = IndexReader.open(directory);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 		}
             
             
@@ -379,7 +393,8 @@ public class IndexBolt implements IRichBolt{
 				s.search(q, collector);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//e.printStackTrace();
+				log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 			}
             
             ScoreDoc[] h = collector.topDocs().scoreDocs;
@@ -390,7 +405,8 @@ public class IndexBolt implements IRichBolt{
 					f=ir.document(toDelete.doc).getField("myid");
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
+					log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 				}
             	String myid=f.stringValue();
             	Term t=new Term("myid",myid);
@@ -398,7 +414,8 @@ public class IndexBolt implements IRichBolt{
 					iw.deleteDocuments(t);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
+					//e.printStackTrace();
+					log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 				}
             	log.info("Deleting document: "+myid+" with score: "+getScore(myid));
             	
@@ -407,7 +424,8 @@ public class IndexBolt implements IRichBolt{
 				iw.commit();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+				//e.printStackTrace();
+				log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 			}
         	
         }
@@ -421,7 +439,8 @@ public class IndexBolt implements IRichBolt{
     			d = ir.document(allScores.get(i).getDocId());
     		} catch (IOException e) {
     			// TODO Auto-generated catch block
-    			e.printStackTrace();
+    			//e.printStackTrace();
+    			log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
     		}
     		if (d!=null){
     			IndexableField nameField=d.getField(DocumentBuilder.FIELD_NAME_IDENTIFIER);
@@ -435,15 +454,12 @@ public class IndexBolt implements IRichBolt{
 
         try {
 			ir.close();
-			collector.ack(input);
+			//collector.ack(input);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			//e1.printStackTrace();
 			log.error("Tuple failed: " + e1 + " | " + e1.getMessage() + " | " + ExceptionUtils.getStackTrace(e1));
 		}
-        
-        // We probably want to ack always as if we do not ack, tuple is stored in previous bolt
-        collector.ack(input);
 
         
 //        try {
@@ -453,6 +469,10 @@ public class IndexBolt implements IRichBolt{
 //			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
+        
+        
+     // We probably want to ack always when this is the last bolt as if we do not ack, the tuple is stored in previous bolt
+        collector.ack(input);
 	}
 	
 	/**
@@ -487,7 +507,8 @@ public class IndexBolt implements IRichBolt{
 			d = ir.document(docNumber);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 		}
 		if (d!=null){
 			IndexableField lengthField=d.getField("length");
@@ -524,7 +545,8 @@ public class IndexBolt implements IRichBolt{
 			sc = is.search(q, 1);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			//e.printStackTrace();
+			log.error("Error: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
 		}
 		if (sc==null || sc.totalHits==0){
 			return -1.0F;

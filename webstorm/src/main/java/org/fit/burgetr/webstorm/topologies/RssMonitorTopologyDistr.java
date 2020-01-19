@@ -15,6 +15,8 @@ import java.util.Date;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.topology.TopologyBuilder;
+import org.apache.storm.tuple.Fields;
+
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.util.StatusPrinter;
 import org.apache.storm.StormSubmitter;
@@ -61,7 +63,7 @@ public class RssMonitorTopologyDistr
         AnalyzerBolt analyzer = new AnalyzerBolt("kw","img",uuid);
         ExtractFeaturesBolt extractor = new ExtractFeaturesBolt(uuid);
         IndexBolt indexer=new IndexBolt(uuid);
-        //NKStoreBolt nkstore = new NKStoreBolt();
+        NKStoreBolt nkstore = new NKStoreBolt();
         
         //create the topology
         TopologyBuilder builder = new TopologyBuilder();
@@ -71,9 +73,11 @@ public class RssMonitorTopologyDistr
         builder.setBolt("DownloaderBolt", downloader, 4).shuffleGrouping("FeedReaderBolt");
         //builder.setBolt("AnalyzerBolt", analyzer, 3).shuffleGrouping("DownloaderBolt");
         builder.setBolt("AnalyzerBolt", analyzer, 2).shuffleGrouping("DownloaderBolt");
-        builder.setBolt("ExtractFeaturesBolt", extractor, 2).globalGrouping("AnalyzerBolt", "img");
-        builder.setBolt("IndexBolt", indexer,3).shuffleGrouping("ExtractFeaturesBolt");
-        //builder.setBolt("nkstore", nkstore, 1).globalGrouping("analyzer", "kw");
+        builder.setBolt("ExtractFeaturesBolt", extractor, 2).shuffleGrouping("AnalyzerBolt", "img");
+        builder.setBolt("IndexBolt", indexer,3)
+        	.fieldsGrouping("ExtractFeaturesBolt", new Fields("name"));
+        	//.fieldsGrouping("AnalyzerBolt", "kw", new Fields("name")); // Index cannot consume kw for now
+        builder.setBolt("nkstore", nkstore, 1).globalGrouping("AnalyzerBolt", "kw");
 
         Config conf = new Config();
         //conf.setDebug(true); // Enabling this, you get all transferred messages to be logged

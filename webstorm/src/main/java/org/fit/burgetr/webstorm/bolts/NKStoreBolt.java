@@ -68,13 +68,16 @@ public class NKStoreBolt implements IRichBolt
         try
         {
             storeOccurence(name, keyword);
-            collector.ack(input);
+            //collector.ack(input);
         }
         catch (SQLException e)
         {
             e.printStackTrace();
-            collector.fail(input);
+            //collector.fail(input);
         }
+        
+        // Ack all so that we do not replay failed stuff
+        collector.ack(input);
         
     }
 

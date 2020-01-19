@@ -175,16 +175,17 @@ public class DownloaderBolt implements IRichBolt
             //monitor.MonitorTuple("DownloaderBolt", uuid, 1,hostname, estimatedTime);
             
             collector.emit(new Values(title, urlstring, document.html(), allImg, uuid));
-            collector.ack(input);
+            //collector.ack(input);
         } 
         catch (Exception e)
         {
             log.warn("Fetch error: " + e.getClass() + " " + e.getMessage() + " URL: " + urlstring);
         	//log.error("Fetch error: " + ExceptionUtils.getStackTrace(e) + " Original URL:" + originalUrl);
         	//log.error("Fetch error: " + " Original URL:" + originalUrl);
-            collector.fail(input);
+            //collector.fail(input);
         }
         
+        collector.ack(input);
     }
 
     @Override
