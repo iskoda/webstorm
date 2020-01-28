@@ -1,4 +1,4 @@
-package storm;
+package cz.vutbr.fit.storm;
 
 import java.awt.image.ConvolveOp;
 import java.io.UnsupportedEncodingException;
@@ -37,7 +37,7 @@ import org.apache.storm.scheduler.Topologies;
 import org.apache.storm.scheduler.TopologyDetails;
 import org.apache.storm.scheduler.WorkerSlot;
 
-public class BenchmarkScheduler implements IScheduler {
+public class CostAwareScheduler implements IScheduler {
 	// Next rescheduling times by topologies (topology ID)
 	private Map<String, Date> reschedulingForTopology = new HashMap<String, Date>();
 	// Last rescheduling times by topologies (topology ID)

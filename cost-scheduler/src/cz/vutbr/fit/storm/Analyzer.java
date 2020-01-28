@@ -1,4 +1,4 @@
-package storm;
+package cz.vutbr.fit.storm;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

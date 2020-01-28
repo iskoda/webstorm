@@ -23,9 +23,11 @@
 				<descriptorRef>jar-with-dependencies</descriptorRef>
 			</descriptorRefs>
 			<archive>
-				<manifest>
-					<mainClass>storm.ManualScheduler</mainClass>
-				</manifest>
+				<!-- 
+					<manifest>
+						<mainClass>cz.vutbr.fit.storm.CostAwareScheduler</mainClass>
+					</manifest>
+				 -->
 			</archive>
 			<finalName>but-scheduler</finalName>
 			<appendAssemblyId>true</appendAssemblyId>
