@@ -192,15 +192,18 @@ public class IndexBolt implements IRichBolt{
         String image_url=input.getString(4);
         String uuid=input.getString(3);
         
-        byte[] imageData=input.getBinary(2);
-        BufferedImage image=null;
-		try {
-			image = ImageIO.read(new ByteArrayInputStream(imageData));
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			//e1.printStackTrace();
-			log.error("Cannot read image: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
-		}
+        // Read image (we use this only if search by image
+//        byte[] imageData=input.getBinary(2);
+//        BufferedImage image=null;
+//		try {
+//			image = ImageIO.read(new ByteArrayInputStream(imageData));
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			//e1.printStackTrace();
+//			log.error("Cannot read image: " + e + " | " + e.getMessage() + " | " + ExceptionUtils.getStackTrace(e));
+//		}
+		
+		
         DateTime now = DateTime.now();
         String dateString=String.valueOf(now.getYear())+"-"+String.valueOf(now.getMonthOfYear())+"-"+String.valueOf(now.getDayOfMonth())+"-"+String.valueOf(now.getHourOfDay())+"-"+String.valueOf(now.getMinuteOfHour())+"-"+String.valueOf(now.getSecondOfMinute())+"-"+String.valueOf(now.getMillisOfSecond());
         log.info("DateTime:"+dateString+", Indexing image from url: " + image_url+" (originating from document with uuid: "+uuid+")");
@@ -281,6 +284,16 @@ public class IndexBolt implements IRichBolt{
 			}
         }
         
+        // Prepare the document, so we can search by LIRE feature not by image
+        Document document = new Document();
+        document.add(new Field(DocumentBuilder.FIELD_NAME_CEDD, feature));
+        document.add(new Field(DocumentBuilder.FIELD_NAME_IDENTIFIER, name, Field.Store.YES, Field.Index.NOT_ANALYZED));
+        document.add(new Field("image_url",image_url,Field.Store.YES,Field.Index.NOT_ANALYZED));
+        // To save bandwidth, storage and other resources, we do not save the image itself
+        //document.add(new Field("image", imageData));
+        document.add(new Field("myid",UUID.randomUUID().toString(), Field.Store.YES, Field.Index.NOT_ANALYZED));
+        
+        
         try {
 			ir = IndexReader.open(directory);
 		} catch (IOException e) {
@@ -293,7 +306,11 @@ public class IndexBolt implements IRichBolt{
         ImageSearcher searcher = ImageSearcherFactory.createCEDDImageSearcher(10);
         ImageSearchHits hits=null;
         try {
-			hits = searcher.search(image, ir);
+        	// Search by image
+			//hits = searcher.search(image, ir);
+        	
+        	// Search by LIRE feature
+        	hits = searcher.search(document, ir);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			//e1.printStackTrace();
@@ -337,16 +354,12 @@ public class IndexBolt implements IRichBolt{
 				}
 
             }
+            else {
+            	// Best scored documents are on top, so we can finish on first document under threshold
+            	break;
+            }
         }
         
-        
-        
-        Document document = new Document();
-        document.add(new Field(DocumentBuilder.FIELD_NAME_CEDD, feature));
-        document.add(new Field(DocumentBuilder.FIELD_NAME_IDENTIFIER, name, Field.Store.YES, Field.Index.NOT_ANALYZED));
-        document.add(new Field("image_url",image_url,Field.Store.YES,Field.Index.NOT_ANALYZED));
-        document.add(new Field("image", imageData));
-        document.add(new Field("myid",UUID.randomUUID().toString(), Field.Store.YES, Field.Index.NOT_ANALYZED));
         
         
         if (overThreshold>0){

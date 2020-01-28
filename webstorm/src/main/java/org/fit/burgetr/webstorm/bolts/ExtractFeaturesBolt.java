@@ -128,7 +128,7 @@ public class ExtractFeaturesBolt implements IRichBolt {
 //			e.printStackTrace();
 //		}
     	
-    	collector.emit(new Values(name,feature,image_data,uuid,image_url));
+    	collector.emit(new Values(name,feature, null /*image_data*/ ,uuid,image_url));
         
     	collector.ack(input);
     	 

@@ -73,9 +73,10 @@ public class RssMonitorTopologyDistr
         builder.setBolt("DownloaderBolt", downloader, 4).shuffleGrouping("FeedReaderBolt");
         //builder.setBolt("AnalyzerBolt", analyzer, 3).shuffleGrouping("DownloaderBolt");
         builder.setBolt("AnalyzerBolt", analyzer, 2).shuffleGrouping("DownloaderBolt");
-        builder.setBolt("ExtractFeaturesBolt", extractor, 2).shuffleGrouping("AnalyzerBolt", "img");
-        builder.setBolt("IndexBolt", indexer,3)
-        	.fieldsGrouping("ExtractFeaturesBolt", new Fields("name"));
+        builder.setBolt("ExtractFeaturesBolt", extractor, 1).shuffleGrouping("AnalyzerBolt", "img");
+        builder.setBolt("IndexBolt", indexer,4)
+        	.shuffleGrouping("ExtractFeaturesBolt");
+        	//.fieldsGrouping("ExtractFeaturesBolt", new Fields("name"));
         	//.fieldsGrouping("AnalyzerBolt", "kw", new Fields("name")); // Index cannot consume kw for now
         builder.setBolt("nkstore", nkstore, 1).globalGrouping("AnalyzerBolt", "kw");
 
@@ -83,7 +84,16 @@ public class RssMonitorTopologyDistr
         //conf.setDebug(true); // Enabling this, you get all transferred messages to be logged
         //conf.put(Config.TOPOLOGY_DEBUG, true); // Enabling this, you get all transferred messages to be logged (probably same as previous line - setDebug(true)
         conf.setNumWorkers(8);
-        conf.setMaxSpoutPending(5000);
+        //conf.setMaxSpoutPending(5000);
+        conf.setMaxSpoutPending(500);
+        
+        //
+        // Configure buffers for this topology
+        // This topology sends rather big messages around 1 MB in size as it contains images
+        // buffers can easily run out of memory.
+        //
+        conf.put("topology.transfer.buffer.size", 80);
+        conf.put("topology.executor.receive.buffer.size", 80);
         
         
         // Configure supervisors for spout and bolt types
